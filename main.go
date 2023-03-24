@@ -18,6 +18,7 @@ func main() {
 	http.HandleFunc("/contact", contactHandler)
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/dashboard", dashboardHandler)
 
 	fmt.Println("Starting the server on port 8080...")
 	http.ListenAndServe("localhost:8080", nil)
@@ -46,4 +47,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	//fmt.Fprint(w, "hello world")
 	tpl.ExecuteTemplate(w, "login.html", nil)
+}
+func dashboardHandler(w http.ResponseWriter, r *http.Request) {
+	//fmt.Fprint(w, "hello world")
+	tpl.ExecuteTemplate(w, "dashboard.html", nil)
 }
