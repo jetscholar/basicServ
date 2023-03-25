@@ -1,15 +1,66 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var tpl *template.Template
 
 func main() {
 
+	// get ENV variable
+	envErr := godotenv.Load(".env")
+	if envErr != nil {
+		fmt.Printf("Could not load env file")
+		os.Exit(1)
+	}
+	var (
+		mongoURI = os.Getenv("SECURE_URL")
+	)
+
+	//fmt.Printf("SECURE_URL: %s\n", os.Getenv("SECURE_URL"))
+	// DB Connection
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURI))
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := context.Background()
+	err = client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		fmt.Println("Connected to the Mongo DB")
+	}
+	defer client.Disconnect(ctx)
+
+	// Connect/create to DB instance
+	goDemoDB := client.Database("godemo")
+	err = goDemoDB.CreateCollection(ctx, "cats")
+	if err != nil {
+		log.Fatal((err))
+	}
+	catsCollection := goDemoDB.Collection("cats")
+	defer catsCollection.Drop(ctx)
+	result, err := catsCollection.InsertOne(ctx, bson.D{
+		{Key: "name", Value: "Mocha"},
+		{Key: "breed", Value: "Turkish Van"},
+	})
+	if err != nil {
+		log.Fatal((err))
+	}
+	fmt.Println("Result:", result)
+
+	// Routes
 	//tpl, _ = template.ParseFiles("index.html")
 	tpl, _ = template.ParseGlob("templates/*.html")
 
